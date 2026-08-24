@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=69,<81"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ahead-order-picking"
+version = "0.1.0"
+description = "Data-free early assignment and worker staging reference for human-robot order picking"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Godpa-juke"}]
+dependencies = [
+  "reverse-auction-assignment @ git+https://github.com/Godpa-juke/reverse-auction-order-picking.git@3cd49c1b6182dcb32b4fe8afdec51d780cda6806",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

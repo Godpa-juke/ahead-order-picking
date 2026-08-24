@@ -9,6 +9,24 @@ The public artifact exposes two complementary mechanisms:
 
 Arrival uncertainty is represented by Q50/Q90 duration estimates. Static, rolling-quantile, CatBoost median, CatBoost multi-quantile, and oracle backends share one interface.
 
+## Isaac Sim rollout
+
+[![AHEAD-A actual Isaac Sim rollout](media/ahead_isaac_sim.png)](media/ahead_isaac_sim.mp4)
+
+The video is RGB captured from an actual Isaac Sim/Isaac Lab `Camera` on a procedural USD warehouse stage. It executes this repository's `rv_static` rendezvous cost matrix and Bertsekas solver. En-route robots become eligible before parking, so robots and pickers travel concurrently toward their rendezvous targets. The title/status overlay is applied to the captured Isaac RGB frames.
+
+```bash
+REPO="$PWD"
+cd /path/to/IsaacLab
+PYTHONPATH="$REPO:$PWD/source/isaaclab:$PWD/source/isaaclab_assets:$PWD/source/isaaclab_tasks" \
+  ./isaaclab.sh -p "$REPO/scripts/render_isaac_warehouse.py" \
+  --method ahead --headless --enable_cameras --device cuda:0 \
+  --output "$REPO/media/ahead_isaac_sim.mp4" \
+  --poster "$REPO/media/ahead_isaac_sim.png"
+```
+
+The machine-readable run receipt is [`media/ahead_isaac_sim.json`](media/ahead_isaac_sim.json). This is a qualitative synthetic-layout demonstration, not a private-facility throughput experiment.
+
 ## What you can run
 
 After cloning, you can:
@@ -90,6 +108,7 @@ Unlike assignment, staging never reserves a robot/picker pair.
 | `rware/engine/warehouse_engine.py` | simulator event-loop integration |
 | `rware/engine/service_time.py` | deterministic/variable service-time scenarios |
 | `scripts/run_synthetic_ahead.py` | deterministic no-data example |
+| `scripts/render_isaac_warehouse.py` | actual Isaac Sim USD-stage rollout and Camera capture |
 | `tests/test_iarl_validation.py` | model and consumer-separation contracts |
 
 ## Public reproducibility boundary

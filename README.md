@@ -11,9 +11,9 @@ Arrival uncertainty is represented by Q50/Q90 duration estimates. Static, rollin
 
 ## Isaac Sim rollout
 
-[![AHEAD-A actual Isaac Sim rollout](media/ahead_isaac_sim.png)](media/ahead_isaac_sim.mp4)
+![AHEAD-A actual Isaac Sim rollout](media/ahead_isaac_sim.gif)
 
-The video is RGB captured from an actual Isaac Sim/Isaac Lab `Camera` on a procedural USD warehouse stage. It executes this repository's `rv_static` rendezvous cost matrix and Bertsekas solver. En-route robots become eligible before parking, so robots and pickers travel concurrently toward their rendezvous targets. The title/status overlay is applied to the captured Isaac RGB frames.
+The looping GIF is derived from RGB captured by an actual Isaac Sim/Isaac Lab `Camera` on a procedural USD warehouse stage. It executes this repository's `rv_static` rendezvous cost matrix and Bertsekas solver. En-route robots become eligible before parking, so robots and pickers travel concurrently toward their rendezvous targets. The title/status overlay is applied to the captured Isaac RGB frames.
 
 ```bash
 REPO="$PWD"

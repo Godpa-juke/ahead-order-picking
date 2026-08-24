@@ -1,18 +1,37 @@
 [build-system]
-requires = ["setuptools>=69,<81"]
+requires = ["setuptools>=75,<82", "wheel>=0.44,<1"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ahead-order-picking"
 version = "0.1.0"
-description = "Data-free early assignment and worker staging reference for human-robot order picking"
+description = "Executable RWARE simulator code for AHEAD early assignment and demand-aware staging"
 readme = "README.md"
-requires-python = ">=3.10"
-license = {text = "MIT"}
-authors = [{name = "Godpa-juke"}]
+requires-python = ">=3.10,<3.14"
+license = {file = "LICENSE"}
+authors = [{name = "Jiwook Kim"}]
 dependencies = [
-  "reverse-auction-assignment @ git+https://github.com/Godpa-juke/reverse-auction-order-picking.git@3cd49c1b6182dcb32b4fe8afdec51d780cda6806",
+  "gymnasium>=1.2,<2",
+  "matplotlib>=3.8,<4",
+  "networkx>=3,<4",
+  "numpy>=2,<3",
+  "pandas>=2,<3",
+  "pygame>=2.6,<3",
+  "pyglet>=1.5,<3",
+  "pyyaml>=6,<7",
+  "pyzmq>=26,<28",
+  "seaborn>=0.13,<1",
+  "six>=1.16,<2",
 ]
 
+[project.optional-dependencies]
+learning = ["catboost>=1.2,<2"]
+dev = ["pytest>=8,<10"]
+
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["rware*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

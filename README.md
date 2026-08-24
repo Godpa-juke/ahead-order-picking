@@ -1,71 +1,136 @@
-# AHEAD: Anticipatory Human Early Assignment and Deployment
+# AHEAD Order Picking
 
-A data-free reference implementation of two timing interventions for collaborative human–robot order picking.
+Executable research code for **anticipatory human dispatch and demand-aware staging in collaborative order-picking systems**. AHEAD is implemented inside the same RWARE event loop that produces robot arrivals, worker travel, service, and queueing—it is not a detached formula-only reimplementation.
 
-- **AHEAD-A — early assignment:** consider robot requests while the robot is still traveling and match predicted worker and robot arrival times.
-- **AHEAD-D — deployment:** move otherwise-idle workers toward open demand before a request becomes serviceable.
+The public artifact exposes two complementary mechanisms:
 
-This repository contains only reusable algorithm code, explanatory text, and toy invariant tests. It does not publish a paper, experiment output, warehouse workload, or measured result.
+- **AHEAD-A — early assignment:** assign an idle picker to an en-route robot before the robot parks at its rack;
+- **AHEAD-D — demand-aware staging:** move an unassigned picker toward observable near-term rack demand without committing that picker to a request.
 
-## Relationship to the baseline
+Arrival uncertainty is represented by Q50/Q90 duration estimates. Static, rolling-quantile, CatBoost median, CatBoost multi-quantile, and oracle backends share one interface.
 
-AHEAD-A uses the one-to-one solver from [`reverse-auction-order-picking`](https://github.com/Godpa-juke/reverse-auction-order-picking), pinned to a specific commit in `pyproject.toml`.
+## What you can run
 
-## What is included
+After cloning, you can:
 
-- quantile ETA input type (`q50`, `q90`);
-- rendezvous cost with robot wait, worker travel, worker wait, and tail-risk terms;
-- guards for speculative en-route assignments;
-- one-to-one early assignment;
-- one-to-one idle-worker staging with deterministic tie-breaking;
-- toy tests for timing and assignment invariants.
+1. execute the real rolling arrival-risk model on a deterministic synthetic trace;
+2. inspect every registered early-assignment strategy;
+3. evaluate the actual staging score used by the simulator;
+4. run asset-free behavior tests for estimator separation, quantile behavior, assignment, map DSL, and movement enforcement.
 
-## What is not included
+## Quick start
 
-- PDF, manuscript, LaTeX, tables, or generated figures;
-- measured performance values or experiment summaries;
-- raw or aggregate data;
-- warehouse layouts, orders, models, or model checkpoints;
-- private simulator code or Git history.
-
-## Install
+Python 3.10–3.13 is supported.
 
 ```bash
-python -m pip install -e .
+git clone https://github.com/Godpa-juke/ahead-order-picking.git
+cd ahead-order-picking
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+python scripts/run_synthetic_ahead.py
+pytest
 ```
 
-## AHEAD-A example
+For the CatBoost backend:
 
-```python
-from ahead_order_picking import Eta, Request, Worker, assign_early
-
-workers = [Worker("w0"), Worker("w1")]
-requests = [Request("r0", robot_eta=Eta(4, 5)), Request("r1", robot_eta=Eta(8, 9))]
-
-worker_eta = {
-    ("w0", "r0"): Eta(3, 4),
-    ("w0", "r1"): Eta(9, 11),
-    ("w1", "r0"): Eta(8, 10),
-    ("w1", "r1"): Eta(7, 8),
-}
-
-print(assign_early(workers, requests, worker_eta.__getitem__))
+```bash
+python -m pip install -e '.[dev,learning]'
 ```
 
-## AHEAD-D staging score
+The default synthetic example uses the dependency-free rolling-quantile backend, so it runs without CatBoost or private warehouse data.
 
-For an idle worker at distance `d` from an open request with predicted readiness interval `[q50, q90]`, the reference score is:
+## System design
+
+### AHEAD-A: early rendezvous assignment
+
+A robot in `ROBOT_MOVESPOT` already exposes its destination rack. AHEAD-A admits that en-route robot to the assignment candidate set and evaluates a rendezvous cost using:
+
+- picker travel time to the target rack;
+- robot arrival Q50;
+- robot-arrival uncertainty `Q90 - Q50`;
+- early-picker idle time at the rack;
+- robot late-wait time;
+- optional urgency/fairness terms inherited from the auction baseline.
+
+The registered policy family includes static, Q50-only, risk-aware, real-time event-triggered, rolling-median, and oracle variants.
+
+### AHEAD-D: demand-aware staging
+
+An idle picker remains freely assignable but receives a temporary target near observable demand. Candidate targets come from parked or en-route robots. The learned score is:
 
 ```text
-d
-+ early_weight × max(0, q50 - d)
-+ uncertainty_weight × max(0, q90 - q50)
+travel_distance
++ early_weight * max(0, ready_q50 - travel_distance)
++ uncertainty_weight * max(0, ready_q90 - ready_q50)
 ```
 
-Lower is better. Requests and workers are claimed one-to-one in deterministic global score order.
+Unlike assignment, staging never reserves a robot/picker pair.
 
-## Test
+### Arrival-risk estimator
+
+`ServiceRiskModel` returns `(Q50, Q90)` through one interface:
+
+| Backend | Behavior |
+|---|---|
+| `static` | path/static estimate; no uncertainty spread |
+| `rolling_median` | rolling empirical duration/static ratios |
+| `catboost_median` | learned Q50 only; returns Q90 = Q50 |
+| `catboost` | learned multi-quantile Q50/Q90 |
+| `oracle` | upper-bound input supplied by the caller |
+
+## Code map
+
+| Path | Purpose |
+|---|---|
+| `rware/engine/human_assignment.py` | reverse-auction baseline and AHEAD-A rendezvous policies |
+| `rware/engine/arrival.py` | feature collection, model lifecycle, prediction accounting |
+| `rware/learning/risk_model.py` | Q50/Q90 estimator backends |
+| `rware/engine/staging.py` | AHEAD-D target generation and staging score |
+| `rware/engine/warehouse_engine.py` | simulator event-loop integration |
+| `rware/engine/service_time.py` | deterministic/variable service-time scenarios |
+| `scripts/run_synthetic_ahead.py` | deterministic no-data example |
+| `tests/test_iarl_validation.py` | model and consumer-separation contracts |
+
+## Public reproducibility boundary
+
+Included:
+
+- executable RWARE simulator integration;
+- AHEAD-A, AHEAD-D, arrival-risk, and auction baseline source;
+- inline synthetic map and deterministic synthetic trace;
+- behavioral tests;
+- license, citation, and source provenance.
+
+Not included:
+
+- real warehouse orders or operational records;
+- facility-specific maps and precomputed path arrays;
+- trained models, raw experiment outputs, manuscripts, or internal paths.
+
+The repository supports **algorithm reuse, policy extension, synthetic execution, and contract-level reproduction**. It does not claim that private-site throughput tables can be regenerated from the public inputs.
+
+## Tests
 
 ```bash
-python -m unittest discover -s tests -v
+pytest
 ```
+
+The public suite checks runtime behavior, including:
+
+- rolling and learned quantile semantics;
+- separation of assignment and staging estimator backends;
+- strategy registration;
+- auction ablation relationships;
+- map-overlay and movement enforcement on an inline synthetic warehouse.
+
+## Extending AHEAD
+
+- Add an arrival backend behind `ServiceRiskModel` while preserving `(Q50, Q90)` semantics.
+- Add an early-assignment policy through `HumanAssignmentStrategy` and the strategy registry.
+- Add a staging policy in `StagingPlanner`, keeping staging non-committal.
+- Compare policies on the same distance and simulator event definitions; do not silently change the environment between baselines.
+
+## Provenance and license
+
+See [`PROVENANCE.md`](PROVENANCE.md) for the canonical export revision. This project is a modified derivative of RWARE. The upstream MIT copyright and license are preserved in [`LICENSE`](LICENSE).

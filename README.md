@@ -9,6 +9,21 @@ The public artifact exposes two complementary mechanisms:
 
 Arrival uncertainty is represented by Q50/Q90 duration estimates. Static, rolling-quantile, CatBoost median, CatBoost multi-quantile, and oracle backends share one interface.
 
+[![AHEAD-A 45-degree warehouse demo](media/ahead_poster.png)](media/ahead_demo.mp4)
+
+[Watch or download the AHEAD-A MP4](media/ahead_demo.mp4)
+
+The six-second synthetic rollout calls the repository's actual `rv_static` rendezvous cost matrix and Bertsekas auction solver. AHEAD-A admits en-route robots and dispatches H1/H2 early, so robots and pickers travel simultaneously toward P1/P2. The 45-degree isometric geometry is synthetic and contains no private warehouse data.
+
+Reproduce it with:
+
+```bash
+python scripts/render_synthetic_warehouse.py \
+  --method ahead \
+  --output media/ahead_demo.mp4 \
+  --poster media/ahead_poster.png
+```
+
 ## What you can run
 
 After cloning, you can:
@@ -89,7 +104,8 @@ Unlike assignment, staging never reserves a robot/picker pair.
 | `rware/engine/staging.py` | AHEAD-D target generation and staging score |
 | `rware/engine/warehouse_engine.py` | simulator event-loop integration |
 | `rware/engine/service_time.py` | deterministic/variable service-time scenarios |
-| `scripts/run_synthetic_ahead.py` | deterministic no-data example |
+| `scripts/run_synthetic_ahead.py` | deterministic no-data estimator/staging example |
+| `scripts/render_synthetic_warehouse.py` | actual-policy 45-degree isometric MP4 renderer |
 | `tests/test_iarl_validation.py` | model and consumer-separation contracts |
 
 ## Public reproducibility boundary

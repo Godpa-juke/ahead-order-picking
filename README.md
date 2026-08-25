@@ -9,6 +9,12 @@ The public artifact exposes two complementary mechanisms:
 
 Arrival uncertainty is represented by Q50/Q90 duration estimates. Static, rolling-quantile, CatBoost median, CatBoost multi-quantile, and oracle backends share one interface.
 
+## Canonical Site-A experiment environment
+
+![Canonical Site-A AHEAD 45-degree Isaac Sim rollout](media/canonical_sitea_ahead_45deg.gif)
+
+This shared environment demo mirrors the canonical comparison setup: Site-A batched orders, Batch-Random sequencing, 8 human pickers, 20 robots, and the AHEAD `rv_static` policy. Motion comes from the real RWARE event loop through its ZMQ bridge and is rendered by an Isaac Sim/Isaac Lab `Camera` at a fixed 45-degree downward angle. Isaac only interpolates adjacent source ticks. The operational orders, facility trace, and layout data are not included in this public repository.
+
 ## Isaac Sim rollout
 
 ![AHEAD-A actual Isaac Sim rollout](media/ahead_isaac_sim.gif)
